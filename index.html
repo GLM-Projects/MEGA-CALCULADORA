@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+    <title>Mega Calculadora com Vue.js e Vuetify</title>
+  
+    <link href="https://cdn.jsdelivr.net/npm/vuetify@2.5.8/dist/vuetify.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font/css/materialdesignicons.min.css" rel="stylesheet">
+  
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="app">
+        <v-app>
+            <v-container>
+                <v-row class="text-center">
+                    <v-col cols="12">
+                        <h1>Mega Calculadora</h1>
+                    </v-col>
+                </v-row>
+
+                <v-row>
+                    <v-col cols="12">
+                        <v-card class="pa-3">
+                            <v-row>
+                                <v-col v-for="(valor, index) in valores" :key="index" cols="12">
+                                    <v-text-field
+                                        v-model="valores[index]"
+                                        label="Digite um valor"
+                                        type="number"
+                                        @input="atualizarCalculos"
+                                    ></v-text-field>
+                                </v-col>
+                            </v-row>
+                            <v-btn @click="adicionarCaixa" color="primary" dark>Adicionar Valor</v-btn>
+                        </v-card>
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-4">
+                    <v-col cols="12">
+                        <v-card class="pa-3">
+                            <v-row>
+                                <v-col cols="12">
+                                    <h3>Escolha os cálculos que deseja ver:</h3>
+                                </v-col>
+                                <v-col cols="12" sm="6" v-for="(calc, key) in opcoesCalculo" :key="key">
+                                    <v-checkbox
+                                        v-model="calc.ativo"
+                                        :label="calc.label"
+                                    ></v-checkbox>
+                                </v-col>
+                            </v-row>
+                        </v-card>
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-4">
+                    <v-col cols="12">
+                        <v-card class="pa-3">
+                            <h3>Resultados em tempo real:</h3>
+                            <v-row>
+                                <v-col v-if="opcoesCalculo.soma.ativo" cols="12">
+                                    <p><strong>Soma:</strong> {{ soma.toFixed(2) }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.subtracao.ativo" cols="12">
+                                    <p><strong>Subtração:</strong> {{ subtracao.toFixed(2) }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.multiplicacao.ativo" cols="12">
+                                    <p><strong>Multiplicação:</strong> {{ multiplicacao.toFixed(2) }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.divisao.ativo" cols="12">
+                                    <p><strong>Divisão:</strong> {{ divisao.toFixed(2) }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.media.ativo" cols="12">
+                                    <p><strong>Média:</strong> {{ media.toFixed(2) }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.potencia.ativo" cols="12">
+                                    <p><strong>Potência ({{ potencia.base }}^{{ potencia.expoente }}):</strong> {{ potencia.resultado }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.raizQuadrada.ativo" cols="12">
+                                    <p><strong>Raiz Quadrada:</strong> {{ raizQuadrada.toFixed(2) }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.fatorial.ativo" cols="12">
+                                    <p><strong>Fatorial:</strong> {{ fatorial }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.fibonacci.ativo" cols="12">
+                                    <p><strong>Fibonacci:</strong> {{ fibonacci }}</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.conversao.ativo" cols="12">
+                                    <p><strong>Conversão:</strong> {{ conversao.metros }} metros = {{ conversao.kilometros.toFixed(2) }} quilômetros</p>
+                                </v-col>
+                                <v-col v-if="opcoesCalculo.porcentagem.ativo" cols="12">
+                                    <p><strong>Porcentagem:</strong> {{ porcentagem }}%</p>
+                                </v-col>
+                            </v-row>
+                        </v-card>
+                    </v-col>
+                </v-row>
+
+                <v-row class="mt-4">
+                    <v-col cols="12">
+                        <v-card class="pa-3">
+                            <h3>Visualização Gráfica:</h3>
+                            <canvas id="calculosChart"></canvas>
+                        </v-card>
+                    </v-col>
+                </v-row>
+            </v-container>
+        </v-app>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vuetify@2.5.8/dist/vuetify.js"></script>
+
+    <script>
+        new Vue({
+            el: '#app',
+            vuetify: new Vuetify(),
+            data: () => ({
+                valores: [0],
+                opcoesCalculo: {
+                    soma: { ativo: true, label: 'Soma' },
+                    subtracao: { ativo: true, label: 'Subtração' },
+                    multiplicacao: { ativo: false, label: 'Multiplicação' },
+                    divisao: { ativo: false, label: 'Divisão' },
+                    media: { ativo: true, label: 'Média' },
+                    potencia: { ativo: false, label: 'Potência', base: 0, expoente: 0, resultado: 0 },
+                    raizQuadrada: { ativo: false, label: 'Raiz Quadrada' },
+                    fatorial: { ativo: false, label: 'Fatorial' },
+                    fibonacci: { ativo: false, label: 'Fibonacci' },
+                    conversao: { ativo: false, label: 'Conversão' },
+                    porcentagem: { ativo: false, label: 'Porcentagem' },
+                },
+                chart: null,
+                conversao: {
+                    metros: 0,
+                    kilometros: 0
+                }
+            }),
+            computed: {
+                soma() {
+                    return this.valores.reduce((acc, curr) => acc + parseFloat(curr || 0), 0);
+                },
+                subtracao() {
+                    return this.valores.length ? this.valores[0] - this.valores.slice(1).reduce((acc, curr) => acc + parseFloat(curr || 0), 0) : 0;
+                },
+                multiplicacao() {
+                    return this.valores.reduce((acc, curr) => acc * parseFloat(curr || 1));
+                },
+                divisao() {
+                    return this.valores.length ? this.valores[0] / this.valores.slice(1).reduce((acc, curr) => acc * parseFloat(curr || 1), 1) : 0;
+                },
+                media() {
+                    return this.valores.length ? this.soma / this.valores.length : 0;
+                },
+                raizQuadrada() {
+                    return Math.sqrt(this.valores[0] || 0);
+                },
+                fatorial() {
+                    return this.calcularFatorial(this.valores[0]);
+                },
+                fibonacci() {
+                    return this.calcularFibonacci(this.valores[0]);
+                },
+                porcentagem() {
+                    return this.valores.length >= 2 ? (this.valores[0] * this.valores[1] / 100) : 0;
+                },
+            },
+            methods: {
+                calcularFatorial(n) {
+                    if (n < 0) return 0;
+                    if (n === 0) return 1;
+                    return n * this.calcularFatorial(n - 1);
+                },
+                calcularFibonacci(n) {
+                    if (n < 0) return 0;
+                    if (n === 0) return 0;
+                    if (n === 1) return 1;
+                    return this.calcularFibonacci(n - 1) + this.calcularFibonacci(n - 2);
+                },
+                adicionarCaixa() {
+                    this.valores.push(0);
+                    this.atualizarCalculos();
+                },
+                atualizarCalculos() {
+                    this.conversao.kilometros = this.valores[0] / 1000; 
+                    if (this.chart) {
+                        this.chart.update();
+                    }
+                },
+                criarGrafico() {
+                    const ctx = document.getElementById('calculosChart').getContext('2d');
+                    this.chart = new Chart(ctx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Soma', 'Subtração', 'Multiplicação', 'Divisão', 'Média'],
+                            datasets: [{
+                                label: 'Resultados',
+                                data: [this.soma, this.subtracao, this.multiplicacao, this.divisao, this.media],
+                                backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                            }]
+                        },
+                        options: {
+                            scales: {
+                                y: {
+                                    beginAtZero: true
+                                }
+                            }
+                        }
+                    });
+                }
+            },
+            watch: {
+                valores: {
+                    handler() {
+                        this.atualizarCalculos();
+                    },
+                    deep: true
+                }
+            },
+            mounted() {
+                this.criarGrafico();
+                this.atualizarCalculos();
+            }
+        });
+    </script>
+</body>
+</html>
